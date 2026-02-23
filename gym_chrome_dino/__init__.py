@@ -7,13 +7,13 @@
 from gymnasium.envs.registration import register
 
 register(
-    id='ChromeDino-v0', 
-    entry_point='gym_chrome_dino.envs:ChromeDinoEnv', 
-    kwargs={'render': True, 'accelerate': False, 'autoscale': False}
+    id="ChromeDino-v0",
+    entry_point="gym_chrome_dino.envs:ChromeDinoEnv",
+    kwargs={"render": True, "accelerate": False, "autoscale": False},
 )
 
 register(
-    id='ChromeDinoNoBrowser-v0', 
-    entry_point='gym_chrome_dino.envs:ChromeDinoEnv', 
-    kwargs={'render': False, 'accelerate': False, 'autoscale': False}
+    id="ChromeDinoNoBrowser-v0",
+    entry_point="gym_chrome_dino.envs:ChromeDinoEnv",
+    kwargs={"render": False, "accelerate": False, "autoscale": False},
 )

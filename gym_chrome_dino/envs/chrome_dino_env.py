@@ -18,21 +18,20 @@ from gymnasium.utils import seeding
 from gym_chrome_dino.game import DinoGame
 from gym_chrome_dino.utils.helpers import rgba2rgb
 
+
 class ChromeDinoEnv(gym.Env):
-    metadata = {'render_modes': ['rgb_array'], 'render_fps': 10}
+    metadata = {"render_modes": ["rgb_array"], "render_fps": 10}
 
     def __init__(self, render, accelerate, autoscale):
         self.game = DinoGame(render, accelerate)
         image_size = self._observe().shape
-        self.observation_space = spaces.Box(
-            low=0, high=255, shape=(150, 600, 3), dtype=np.uint8
-        )
+        self.observation_space = spaces.Box(low=0, high=255, shape=(150, 600, 3), dtype=np.uint8)
         self.action_space = spaces.Discrete(2)
         self.gametime_reward = 0.1
         self.gameover_penalty = -1
         self.current_frame = self.observation_space.low
         self._action_set = [0, 1, 2]
-    
+
     def _observe(self):
         s = self.game.get_canvas()
         b = io.BytesIO(base64.b64decode(s))
@@ -41,7 +40,7 @@ class ChromeDinoEnv(gym.Env):
         a = np.array(i)
         self.current_frame = a
         return self.current_frame
-    
+
     def step(self, action):
         if action == 1:
             self.game.press_up()
@@ -51,39 +50,49 @@ class ChromeDinoEnv(gym.Env):
             self.game.press_space()
         observation = self._observe()
         reward = self.gametime_reward
-        done = False
+        terminated = False
+        truncated = False
         info = {}
         if self.game.is_crashed():
             reward = self.gameover_penalty
-            done = True
-        return observation, reward, done, info
-    
-    def reset(self, record=False):
+            terminated = True
+        return observation, reward, terminated, truncated, info
+
+    def reset(self, *, seed=None, options=None):
+        super().reset(seed=seed)
+        record = False
+        # legacy
+        if options is not None:
+            record = options.get("record", False)
+        # restart
         self.game.restart()
-        return self._observe()
-    
-    def render(self, mode='rgb_array', close=False):
-        assert mode=='rgb_array', 'Only supports rgb_array mode.'
+        observation = self._observe()
+        info = {}
+        return observation, info
+
+    def render(self, mode="rgb_array", close=False):
+        assert mode == "rgb_array", "Only supports rgb_array mode."
         return self.current_frame
-    
+
     def close(self):
         self.game.close()
-    
+
     def get_score(self):
         return self.game.get_score()
-    
+
     def set_acceleration(self, enable):
         if enable:
-            self.game.restore_parameter('config.ACCELERATION')
+            self.game.restore_parameter("config.ACCELERATION")
         else:
-            self.game.set_parameter('config.ACCELERATION', 0)
-    
+            self.game.set_parameter("config.ACCELERATION", 0)
+
     def get_action_meanings(self):
         return [ACTION_MEANING[i] for i in self._action_set]
 
+
 ACTION_MEANING = {
-    0 : "NOOP",
-    1 : "UP",
-    2 : "DOWN",
-    3 : "SPACE",
+    0: "NOOP",
+    1: "UP",
+    2: "DOWN",
+    3: "SPACE",
 }
