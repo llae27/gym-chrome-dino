@@ -4,7 +4,7 @@
 # Copyright (C) 2018 Elvis Yu-Jing Lin <elvisyjlin@gmail.com>
 # Licensed under the MIT License - https://opensource.org/licenses/MIT
 
-from gym.envs.registration import register
+from gymnasium.envs.registration import register
 
 register(
     id='ChromeDino-v0', 

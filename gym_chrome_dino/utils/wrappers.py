@@ -7,8 +7,8 @@
 import cv2
 import numpy as np
 
-import gym
-from gym import spaces
+import gymnasium as gym
+from gymnasium import spaces
 
 from gym_chrome_dino.utils.atari_wrappers import FrameStack
 from gym_chrome_dino.utils.helpers import Timer

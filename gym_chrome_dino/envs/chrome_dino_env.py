@@ -11,15 +11,15 @@ import os
 from collections import deque
 from PIL import Image
 
-import gym
-from gym import error, spaces, utils
-from gym.utils import seeding
+import gymnasium as gym
+from gymnasium import error, spaces, utils
+from gymnasium.utils import seeding
 
 from gym_chrome_dino.game import DinoGame
 from gym_chrome_dino.utils.helpers import rgba2rgb
 
 class ChromeDinoEnv(gym.Env):
-    metadata = {'render.modes': ['rgb_array'], 'video.frames_per_second': 10}
+    metadata = {'render_modes': ['rgb_array'], 'render_fps': 10}
 
     def __init__(self, render, accelerate, autoscale):
         self.game = DinoGame(render, accelerate)

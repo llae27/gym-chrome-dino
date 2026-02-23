@@ -6,8 +6,10 @@
 
 import os
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
 
 from gym_chrome_dino.utils.helpers import download_chromedriver
 
@@ -18,12 +20,17 @@ class DinoGame():
         chromedriver_path = './chromedriver'
         options = Options()
         options.add_argument('--disable-infobars')
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--remote-debugging-port=9222")
         options.add_argument('--mute-audio')
         options.add_argument('--no-sandbox')
         options.add_argument('--window-size=800,600')
         if not render:
-            options.add_argument('--headless')
-        self.driver = webdriver.Chrome(executable_path=chromedriver_path, options=options)
+            options.add_argument('--headless=new')
+        # self.driver = webdriver.Chrome(executable_path=chromedriver_path, options=options)
+        service = Service(chromedriver_path)
+        self.driver = webdriver.Chrome(service=service, options=options)
         # self.driver.get('chrome://dino')
         self.driver.get('https://elvisyjlin.github.io/t-rex-runner/')
         self.defaults = self.get_parameters()  # default parameters
@@ -51,7 +58,8 @@ class DinoGame():
         return self.driver.execute_script('return Runner.instance_.playing;')
     
     def press_space(self):
-        return self.driver.find_element_by_tag_name('body').send_keys(Keys.SPACE)
+        return self.driver.find_element(By.TAG_NAME, "body").send_keys(Keys.SPACE)
+        # return self.driver.find_element_by_tag_name('body').send_keys(Keys.SPACE)
     
     def press_up(self):
         return self.driver.find_element_by_tag_name('body').send_keys(Keys.UP)
