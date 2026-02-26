@@ -32,7 +32,7 @@ class DinoGame:
         service = Service(chromedriver_path)
         self.driver = webdriver.Chrome(service=service, options=options)
         # self.driver.get('chrome://dino')
-        self.driver.get("https://elvisyjlin.github.io/t-rex-runner/")
+        self.driver.get("https://llae27.github.io/t-rex-runner/src/index.html")
         self.defaults = self.get_parameters()  # default parameters
         if not accelerate:
             self.set_parameter("config.ACCELERATION", 0)
