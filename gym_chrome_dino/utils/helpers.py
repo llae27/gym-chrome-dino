@@ -30,26 +30,30 @@ def download_file(url):
 def download_chromedriver():
     # We're getting chrome 145 driver
     import platform
-
-    system = platform.platform().lower()
+    
+    system = platform.system().lower()
     machine = platform.machine().lower()
-    if "windows" in system:
+    
+    if system == "windows":
         if machine in ("amd64", "x86_64"):
             keyword = "win64"
         else:
             keyword = "win32"
         chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-    elif "darwin" in system:
+    
+    elif system == "darwin":
         if machine in ("arm64", "aarch64"):
             keyword = "mac-arm64"
         else:
             keyword = "mac-x64"
         chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-    elif "linux" in system:
+    
+    elif system == "linux":
         keyword = "linux64"
         chrome_path = "/usr/bin/google-chrome"
+    
     else:
-        assert False, "Unrecognized operating system: " + system
+        raise RuntimeError("Unrecognized operating system: " + system)
 
     import requests
     import re
