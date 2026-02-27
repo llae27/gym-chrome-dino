@@ -76,8 +76,13 @@ def download_chromedriver():
 
     executable = "chromedriver"
     for extracted_file in extracted:
-        if extracted_file.endswith("chromedriver"):
-            shutil.move(extracted_file, executable)
+        if system == "windows":
+            if extracted_file.endswith("chromedriver.exe"):
+                shutil.move(extracted_file, executable)
+                break
+        else:
+            if extracted_file.endswith("chromedriver"):
+                shutil.move(extracted_file, executable)
     shutil.rmtree(extracted_file.split("/")[0])
 
     import os
