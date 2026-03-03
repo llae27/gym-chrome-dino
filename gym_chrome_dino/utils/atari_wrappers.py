@@ -28,18 +28,17 @@ class NoopResetEnv(gym.Wrapper):
 
     def reset(self, **kwargs):
         """Do no-op action for a number of steps in [1, noop_max]."""
-        self.env.reset(**kwargs)
+        obs, info = self.env.reset(**kwargs)
         if self.override_num_noops is not None:
             noops = self.override_num_noops
         else:
-            noops = self.unwrapped.np_random.randint(1, self.noop_max + 1)  # pylint: disable=E1101
+            noops = self.unwrapped.np_random.integers(1, self.noop_max + 1)  # pylint: disable=E1101
         assert noops > 0
-        obs = None
         for _ in range(noops):
-            obs, _, done, _ = self.env.step(self.noop_action)
-            if done:
-                obs = self.env.reset(**kwargs)
-        return obs
+            obs, _, terminated, truncated, _ = self.env.step(self.noop_action)
+            if terminated or truncated:
+                obs, info = self.env.reset(**kwargs)
+        return obs, info
 
     def step(self, ac):
         return self.env.step(ac)
@@ -53,14 +52,14 @@ class FireResetEnv(gym.Wrapper):
         assert len(env.unwrapped.get_action_meanings()) >= 3
 
     def reset(self, **kwargs):
-        self.env.reset(**kwargs)
-        obs, _, done, _ = self.env.step(1)
-        if done:
+        obs, info = self.env.reset(**kwargs)
+        obs, _, terminated, truncated, _ = self.env.step(1)
+        if terminated or truncated:
             self.env.reset(**kwargs)
-        obs, _, done, _ = self.env.step(2)
-        if done:
+        obs, _, terminated, truncated, _ = self.env.step(2)
+        if terminated or truncated:
             self.env.reset(**kwargs)
-        return obs
+        return obs, info
 
     def step(self, ac):
         return self.env.step(ac)
@@ -114,21 +113,22 @@ class MaxAndSkipEnv(gym.Wrapper):
     def step(self, action):
         """Repeat action, sum reward, and max over last observations."""
         total_reward = 0.0
-        done = None
+        terminated = None
+        truncated = None
         for i in range(self._skip):
-            obs, reward, done, info = self.env.step(action)
+            obs, reward, terminated, truncated, info = self.env.step(action)
             if i == self._skip - 2:
                 self._obs_buffer[0] = obs
             if i == self._skip - 1:
                 self._obs_buffer[1] = obs
             total_reward += reward
-            if done:
+            if terminated or truncated:
                 break
         # Note that the observation on the done=True frame
         # doesn't matter
         max_frame = self._obs_buffer.max(axis=0)
 
-        return max_frame, total_reward, done, info
+        return max_frame, total_reward, terminated, truncated, info
 
     def reset(self, **kwargs):
         return self.env.reset(**kwargs)
@@ -174,10 +174,10 @@ class FrameStack(gym.Wrapper):
         )
 
     def reset(self):
-        ob = self.env.reset()
+        ob, info = self.env.reset()
         for _ in range(self.k):
             self.frames.append(ob)
-        return self._get_ob()
+        return self._get_ob(), info
 
     def step(self, action):
         ob, reward, terminated, truncated, info = self.env.step(action)
@@ -234,8 +234,9 @@ def make_atari(env_id, timelimit=True):
     env = gym.make(env_id)
     if not timelimit:
         env = env.env
-    assert "NoFrameskip" in env.spec.id
+    # assert "NoFrameskip" in env.spec.id
     env = NoopResetEnv(env, noop_max=30)
+    env = WarpFrame(env)
     env = MaxAndSkipEnv(env, skip=4)
     return env
 
@@ -246,7 +247,6 @@ def wrap_deepmind(env, episode_life=True, clip_rewards=True, frame_stack=False, 
         env = EpisodicLifeEnv(env)
     if "FIRE" in env.unwrapped.get_action_meanings():
         env = FireResetEnv(env)
-    env = WarpFrame(env)
     if scale:
         env = ScaledFloatFrame(env)
     if clip_rewards:
