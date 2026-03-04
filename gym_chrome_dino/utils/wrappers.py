@@ -34,10 +34,19 @@ class TimerEnv(gym.Wrapper):
         gym.Wrapper.__init__(self, env)
         self.timer = Timer()
 
+    # def reset(self, **kwargs):
+    #     obs = self.env.reset(**kwargs)
+    #     self.timer.tick()
+    #     return obs
+
     def reset(self, **kwargs):
-        obs = self.env.reset(**kwargs)
+        out = self.env.reset(**kwargs)
+        if isinstance(out, tuple) and len(out) == 2:
+            obs, info = out
+        else:
+            obs, info = out, {}
         self.timer.tick()
-        return obs
+        return obs, info
 
     def step(self, action):
         obs, reward, terminated, truncated, info = self.env.step(action)
