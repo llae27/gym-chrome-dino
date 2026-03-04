@@ -175,10 +175,17 @@ class FrameStack(gym.Wrapper):
 
     def reset(self, **kwargs):
         out = self.env.reset(**kwargs)
-        ob = out[0] if isinstance(out, tuple) else out
+
+        # Gymnasium: (obs, info)
+        if isinstance(out, tuple) and len(out) == 2:
+            ob, info = out
+        else:  # old Gym: obs
+            ob, info = out, {}
+
         for _ in range(self.k):
             self.frames.append(ob)
-        return self._get_ob()
+
+        return self._get_ob(), info
 
     def step(self, action):
         ob, reward, terminated, truncated, info = self.env.step(action)
