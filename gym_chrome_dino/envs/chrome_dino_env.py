@@ -86,6 +86,20 @@ class ChromeDinoEnv(gym.Env):
         else:
             self.game.set_parameter("config.ACCELERATION", 0)
 
+    def set_speed_multiplier(self, value):
+        """Set game speed multiplier (if supported by runner). No-op if not exposed."""
+        try:
+            self.game.set_parameter("config.SPEED", value)
+        except Exception:
+            pass
+
+    def set_obstacle_frequency_multiplier(self, value):
+        """Set obstacle spawn frequency multiplier (if supported by runner). No-op if not exposed."""
+        try:
+            self.game.set_parameter("config.OBSTACLE_FREQUENCY", value)
+        except Exception:
+            pass
+
     def get_action_meanings(self):
         return [ACTION_MEANING[i] for i in self._action_set]
 

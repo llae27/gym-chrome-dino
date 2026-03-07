@@ -54,10 +54,65 @@ class TimerEnv(gym.Wrapper):
         return obs, reward, terminated, truncated, info
 
 
+class DayNightWrapper(gym.ObservationWrapper):
+    """Inverts pixels when day_night_toggle is True (night mode)."""
+
+    def __init__(self, env, day_night_toggle=False):
+        super().__init__(env)
+        self.day_night_toggle = day_night_toggle
+
+    def observation(self, obs):
+        if self.day_night_toggle:
+            return np.asarray(255 - np.asarray(obs, dtype=np.uint8), dtype=np.uint8)
+        return obs
+
+    def set_day_night_toggle(self, value):
+        self.day_night_toggle = bool(value)
+
+
+class SpeedProxyWrapper(gym.Wrapper):
+    """Approximates faster game by performing multiple env steps per agent step (same action)."""
+
+    def __init__(self, env, speed_multiplier=1.0):
+        super().__init__(env)
+        self.speed_multiplier = max(1.0, float(speed_multiplier))
+
+    def step(self, action):
+        total_reward = 0.0
+        n_steps = int(round(self.speed_multiplier))
+        obs, reward, terminated, truncated, info = self.env.step(action)
+        total_reward += reward
+        for _ in range(n_steps - 1):
+            if terminated or truncated:
+                break
+            obs, reward, terminated, truncated, info = self.env.step(action)
+            total_reward += reward
+        return obs, total_reward, terminated, truncated, info
+
+    def set_speed_multiplier(self, value):
+        self.speed_multiplier = max(1.0, float(value))
+
+
 def make_dino(env, timer=True, frame_stack=True):
     env = WarpFrame(env, 160, 80)
     if timer:
         env = TimerEnv(env)
     if frame_stack:
         env = FrameStack(env, 4)
+    return env
+
+
+def make_robustness_dino(
+    env,
+    timer=True,
+    frame_stack=True,
+    day_night_toggle=False,
+    speed_multiplier=1.0,
+):
+    """Like make_dino but adds optional robustness eval wrappers (day/night, speed proxy)."""
+    env = make_dino(env, timer=timer, frame_stack=frame_stack)
+    if day_night_toggle:
+        env = DayNightWrapper(env, day_night_toggle=True)
+    if speed_multiplier > 1.0:
+        env = SpeedProxyWrapper(env, speed_multiplier=speed_multiplier)
     return env
